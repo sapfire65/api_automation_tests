@@ -1,7 +1,0 @@
-httpx
-pytest
-pytest-xdist
-pydantic
-python-dotenv
-colorama
-allure-python-commons
