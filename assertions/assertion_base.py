@@ -1,7 +1,13 @@
+import pprint
+import allure
 from typing import Type
 from pydantic import BaseModel
 from utilities.files_utils import read_json_test_data, read_json_common_response_data
 from utilities.json_utils import compare_json_left_in_right, remove_ids
+from colorama import Fore, Style
+
+S_TEXT = Fore.BLUE
+E_Text = Style.RESET_ALL
 
 
 class LogMsg:
@@ -58,6 +64,7 @@ class BodyLogMsg(LogMsg):
     def __init__(self, response):
         super().__init__('В ТЕЛЕ ОТВЕТА', response)
 
+    @allure.title("Получаем результат сравнения полученного json с эталоном")
     def add_compare_result(self, diff):
         """
         добавляет информацию о результате сравнения полученного json с эталоном
@@ -79,7 +86,7 @@ class CodeLogMsg(LogMsg):
 
     def add_compare_result(self, exp, act):
         """
-        добавляет информацию об ожидаемом и полученной коде
+        добавляет информацию об ожидаемом и полученном коде
         :param exp: ожидаемый код
         :param act: полученный код
         """
@@ -100,7 +107,8 @@ class BodyValueLogMsg(LogMsg):
         self._msg += f"\texptected: {exp}\n\tactual: {act}\n"
         return self
 
-
+@allure.title("Сравнивает код ответа от сервера, с ожидаемым")
+@allure.severity("Major")
 def assert_status_code(response, expected_code):
     """
     сравнивает код ответа от сервера с ожидаемым
@@ -114,7 +122,8 @@ def assert_status_code(response, expected_code):
         .add_response_info() \
         .get_message()
 
-
+@allure.title("Проверка тела ответа на соответствие его схеме")
+@allure.severity("Low")
 def assert_schema(response, model: Type[BaseModel]):
     """
     проверяет тело ответа на соответствие его схеме механизмами pydantic
@@ -130,6 +139,8 @@ def assert_schema(response, model: Type[BaseModel]):
         model.model_validate(body, strict=True)
 
 
+@allure.title("Проверяет, что все значения полей exp_json равны значениям полей в actual_json")
+@allure.severity("Major")
 def assert_left_in_right_json(response, exp_json, actual_json):
     """
     проверяет, что все значения полей exp_json равны значениям полей в actual_json
@@ -147,6 +158,8 @@ def assert_left_in_right_json(response, exp_json, actual_json):
         .get_message()
 
 
+@allure.title("Проверяет ответ от сервера, сравнивая ожидаемый объект с полученным")
+@allure.severity("Major")
 def assert_response_body_fields(request, response, exp_obj=None, rmv_ids=True):
     """
     проверяет ответ от сервера, сравнивая ожидаемый объект с полученным
@@ -156,10 +169,14 @@ def assert_response_body_fields(request, response, exp_obj=None, rmv_ids=True):
     :param rmv_ids: флаг: значение True - удаляет id из тела ответа при проверке, False - не удаляет
     """
     exp_json = read_json_test_data(request) if exp_obj is None else exp_obj
+    print(f"\n{S_TEXT}ожидаемый объект:  \n{exp_json}{E_Text}\n")
     act_json = remove_ids(response.json()) if rmv_ids else response.json()
     assert_left_in_right_json(response, exp_json, act_json)
 
 
+
+@allure.title("Проверяет ответ от сервера, сравнивая полученное значение с ожидаемым для тела запроса")
+@allure.severity("Major")
 def assert_response_body_value(response, exp, act, text=None):
     """
     проверяет ответ от сервера, сравнивая полученное значение с ожидаемым для тела запроса
@@ -176,6 +193,7 @@ def assert_response_body_value(response, exp, act, text=None):
         .get_message()
 
 
+@allure.title("проверяет, что тело ответа содержит пустой список")
 def assert_empty_list(response):
     """
     проверяет, что тело ответа содержит пустой список
@@ -184,6 +202,7 @@ def assert_empty_list(response):
     assert_left_in_right_json(response, [], response.json())
 
 
+@allure.title("Проверяет, что тело ответа содержит данные BAD REQUEST")
 def assert_bad_request(request, response):
     """
     проверяет, что тело ответа содержит данные BAD REQUEST
@@ -193,6 +212,7 @@ def assert_bad_request(request, response):
     assert_response_body_fields(request, response, exp_obj=read_json_common_response_data("bad_request_response"))
 
 
+@allure.title("Проверяет, что тело ответа содержит данные NOT FOUND")
 def assert_not_found(request, response, obj_id):
     """
     проверяет, что тело ответа содержит данные NOT FOUND
@@ -205,6 +225,7 @@ def assert_not_found(request, response, obj_id):
     assert_response_body_fields(request, response, exp_obj=exp)
 
 
+@allure.title("Проверяет, что тело ответа содержит данные NOT EXIST")
 def assert_not_exist(request, response, obj_id):
     """
     проверяет, что тело ответа содержит данные NOT EXIST

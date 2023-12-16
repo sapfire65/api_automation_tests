@@ -1,5 +1,4 @@
 from http import HTTPStatus
-
 from api.objects_api import get_object
 from assertions.assertion_base import assert_response_body_fields, assert_status_code, assert_response_body_value
 from utilities.files_utils import read_json_test_data

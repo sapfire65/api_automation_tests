@@ -1,6 +1,10 @@
 import os
 from httpx import Client, Response
 from utilities.logger_utils import logger
+from colorama import Fore, Style
+
+S_TEXT = Fore.GREEN
+E_Text = Style.RESET_ALL
 
 class ApiClient(Client):
     """
@@ -20,6 +24,8 @@ class ApiClient(Client):
 
         if eval(os.getenv("USE_LOGS")):
             logger.info(f'{method} {url}')
-        return super().request(method, url, **kwargs)
+            status = super().request(method, url, **kwargs)
+            print(f"\n{S_TEXT}request: {method}{E_Text}")
+        return status
 
     
